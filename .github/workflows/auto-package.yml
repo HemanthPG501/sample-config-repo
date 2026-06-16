@@ -1,0 +1,50 @@
+name: Auto Package Config After PR Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - 'release/**'
+
+jobs:
+  build-zip:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Release Branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch branches
+        run: |
+          git fetch origin master
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+
+      - name: Get changed files
+        run: |
+          git diff --name-only --diff-filter=ACMRT origin/master...origin/${{ github.event.pull_request.base.ref }} > changed_files.txt
+          cat changed_files.txt
+
+      - name: Create folder for packaging
+        run: mkdir changed_files
+
+      - name: Copy changed files
+        run: |
+          while IFS= read -r file
+          do
+            mkdir -p changed_files/$(dirname "$file")
+            cp "$file" changed_files/"$file"
+          done < changed_files.txt
+
+      - name: Create ZIP
+        run: zip -r partial-config.zip changed_files
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: partial-config
+          path: |
+            partial-config.zip
+            changed_files.txt
