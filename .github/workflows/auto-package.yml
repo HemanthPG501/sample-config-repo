@@ -24,7 +24,7 @@ jobs:
 
       - name: Get changed files
         run: |
-          git diff --name-only --diff-filter=ACMRT origin/master...origin/${{ github.event.pull_request.base.ref }} > changed_files.txt
+          git diff --name-only --diff-filter=ACMRT origin/main...origin/${{ github.event.pull_request.base.ref }} > changed_files.txt
           cat changed_files.txt
 
       - name: Create folder for packaging
